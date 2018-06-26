@@ -84,3 +84,226 @@ SELECT e.EMPNO
      , e.SAL+(nvl(e.comm, 0))
   FROM emp e
 ;
+
+-- 실습 11)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.SAL*12
+  FROM emp e
+;
+
+-- 실습 12)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.SAL
+     , e.COMM
+  FROM emp e
+ WHERE e.ENAME 
+    IN('MARTIN', 'BLAKE')
+ ;
+ 
+-- 실습 13)
+ SELECT e.EMPNO
+      , e.ENAME
+      , e.JOB
+      , e.SAL+(nvl(e.comm, 0))
+   FROM emp e
+  WHERE e.ENAME 
+     IN('MARTIN', 'BLAKE')
+;
+
+-- 실습 14)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.comm != 0
+;
+ 
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.comm <> 0
+;
+ 
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.comm > 0
+;
+ 
+-- 실습 15)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.comm IS NOT NULL
+;
+ 
+-- 실습 16)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.deptno = 20
+   AND e.sal >2500
+;
+
+-- 실습 17)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.job = 'MANAGER'
+    OR e.deptno = 10
+;
+
+-- 실습 18)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.job
+    IN ('MANAGER', 'CLERK', 'SALESMAN')
+;
+
+-- 실습 19)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.ename
+  LIKE 'A%'
+;
+
+-- 실습 20)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.ename
+  LIKE '%A%'
+;
+
+-- 실습 21)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.ename
+  LIKE '%S'
+;
+
+-- 실습 22)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.ename
+  LIKE '%E_'
+;
+
+-- 실습 23)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.sal
+BETWEEN 2500
+    AND 3000
+;
+
+-- 실습 24)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.comm IS NULL
+;
+
+-- 실습 25)
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.MGR
+     , e.SAL
+     , e.HIREDATE
+     , e.COMM
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.comm IS NOT NULL
+;
+
+-- 실습 26)
+SELECT e.EMPNO 사번
+     , e.ENAME || '의 월급은 '|| e.SAL || ' 입니다.' as 월급여
+  FROM emp e
+;
