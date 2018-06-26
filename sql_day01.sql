@@ -149,7 +149,7 @@ ANALYST
       , e.hiredate
       , e.comm 
    FROM emp e 
-   ORDER BY e.comm DESC
+  ORDER BY e.comm DESC
    ;
  
  -- 8) emp테이블에서 커미션이 작은 순서대로, 직무별 오름차순, 이름별 오름차순으로 정렬
@@ -174,4 +174,217 @@ ANALYST
   ORDER BY e.comm, e.job, e.ename DESC
    ;
 
--- 10) 
+-- (4) Alias : 별칭
+-- 10) emp 테이블에서 
+--     empno --> Employee No.
+--     ename --> Employee Name
+--     job   --> Job Name
+SELECT e.EMPNO as "Employee No."
+     , e.ENAME as "Employee Name"
+     , e.JOB as "Job Name"
+  FROM emp e
+;
+
+-- 11) 10번과 동일 as 키워드 생략하여 조회
+--     empno --> 사번
+--     ename --> 사원 이름
+--     job   --> 직무
+SELECT e.EMPNO 사번
+     , e.ename "직원 번호" 
+     , e.job "직무"
+  FROM emp e
+  ;
+  
+-- 12) 테이블에 붙이는 별칭을 주지 않았을 때
+SELECT empno
+  FROM emp
+;
+SELECT emp.empno
+  FROM emp
+;
+
+SELECT e.empno -- FROM절에서 설정된 테이블 별칭은 SELECT 절에서 사용됨.
+  FROM emp e   -- 소문자 e 가 emp 테이블의 별칭이며 테이블 별칭은 FROM절에 사용함
+;
+
+SELECT d.DEPTNO
+  FROM dept d
+;
+
+-- 13) 영문별칭 사용시 특수기호 _ 사용하는 경우
+SELECT e.EMPNO Employee_No
+     , e.ENAME "Employee Name"
+  FROM emp e
+;
+
+-- 14) 별칭과 정렬의 조합 : SELECT절에 별칭을 준 경우 ORDER BY 절에서 사용가능
+--     emp 테이블에서 사번, 이름, 직무, 입사일, 커미션을 조회할 때
+--     각 컬럼에 대해서 한글별칭을 주어 조회
+--     정렬은 커미션, 직무, 이름을 오름차순 정렬
+SELECT e.EMPNO 사번
+      ,e.ENAME 이름
+      ,e.JOB 직무
+      ,e.hiredate 입사일
+      ,e.COMM 커미션
+  FROM emp e
+ ORDER BY 커미션, 직무, 이름
+;
+
+-- 15) DISTINCT, 별칭, 정렬의 조합
+--     job의 중복을 제거하여 직무라는 별칭으로 조회하고 
+--     내림차순으로 정렬
+SELECT DISTINCT e.JOB 직무
+  FROM emp e
+ ORDER BY 직무 DESC
+ ;
+ /*
+직무
+------------
+SALESMAN
+PRESIDENT
+MANAGER
+CLERK
+ANALYST
+ */
+ 
+ -- (5) WHERE 조건절
+ -- 16) emp테이블에서 empno가 7900인 사원의 
+ --     사번, 이름, 직무, 입사일, 급여, 부서번호를 조회
+ SELECT e.EMPNO
+      , e.ENAME
+      , e.JOB
+      , e.HIREDATE
+      , e.SAL
+      , e.DEPTNO
+   FROM emp e
+  WHERE e.empno = 7900
+;
+/*
+EMPNO, ENAME, JOB, HIREDATE, SAL, DEPTNO
+------------------------------------------
+7900	JAMES	CLERK	81/12/03	950	30
+*/
+
+-- 17) emp테이블에서 empno가 7900이거나 DEPTNO가 20인 직원의
+--     사번, 이름, 직무, 입사일, 급여, 부서번호를 조회
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.HIREDATE
+     , e.SAL
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.empno = 7900 
+    OR e.deptno = 20
+;
+/*
+EMPNO, ENAME, JOB, HIREDATE, SAL, DEPTNO
+------------------------------------------------
+7369	SMITH	CLERK	80/12/17	800	20
+7566	JONES	MANAGER	81/04/02	2975	20
+7900	JAMES	CLERK	81/12/03	950	30
+7902	FORD	ANALYST	81/12/03	3000	20
+*/
+
+-- 18) 17번의 조회조건을 AND조건으로 조합
+--     empno가 7900이고 deptno가 20인 직원의
+--     사번, 이름, 직무, 입사일, 급여, 부서번호를 조회
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.HIREDATE
+     , e.SAL
+     , e.DEPTNO
+  FROM emp e
+ WHERE e.empno = 7900 
+   AND e.deptno = 20
+;
+-- 인출된 모든 행 : 0
+
+-- 19) job이 'CLERK'이면서 deptno가 10인 직원의
+--      사번, 이름, 직무, 부서번호를 조회
+SELECT e.empno
+     , e.ename
+     , e.job
+     , e.deptno
+  FROM emp e
+ WHERE e.job = 'CLERK' -- 문자값 비교시 ''사용, 문자값은 대소문자 구분
+   AND e.deptno = 10   -- 숫자값 비교시 따옴표 사용안함
+;
+
+-- 20) 19번에서 직무 비교값을 솜누자 clerk과 비교하여 결과를 확인
+SELECT e.empno
+     , e.ename
+     , e.job
+     , e.deptno
+  FROM emp e
+ WHERE e.job = 'clerk' -- 문자값 비교시 ''사용, 문자값은 대소문자 구분
+   AND e.deptno = 10   -- 숫자값 비교시 따옴표 사용안함
+;
+-- 소문자 clerk으로 저장된 직무는 없으므로
+-- 인출된 모든 행 : 0
+
+-- (6) 연산자 1. 산술연산자
+-- 21) 사번, 이름, 급여를 조회하고, 급여의 3.3%에 해당하는 원천징수 세금을 계산하여 조회
+SELECT e.EMPNO 사번
+     , e.ENAME 이름
+     , e.SAL 급여
+     , e.SAL * 0.033 원천징수세금
+  FROM emp e
+;
+
+-- 실수령액에 해당하는 96.7%의 급여도 계산
+SELECT e.EMPNO 사번
+     , e.ENAME 이름
+     , e.SAL 급여
+     , e.SAL * 0.033 원천징수세금
+     , e.SAL * 0.967 실수령액
+  FROM emp e
+;
+
+-- 동일결과를 내는 다른 계산
+SELECT e.EMPNO 사번
+     , e.ENAME 이름
+     , e.SAL 급여
+     , e.SAL * 0.033 원천징수세금
+     , e.SAL - (e.SAL * 0.033) 실수령액
+  FROM emp e
+;
+
+-- (6) 연산자 2. 비교연산자
+--     비교연산자는 SELECT절에 사용할 수 없음
+--     WHERE, HAVING절에만 사용함
+
+-- 22) 급여가 2000이 넘는 사원의 사번, 이름, 급여를 조회
+SELECT e.EMPNO
+     , e.ENAME
+     , e.SAL
+  FROM emp e
+ WHERE e.SAL >2000
+;
+
+-- 급여가 1000이상인 직원의 사번, 이름, 급여를 조회
+SELECT e.EMPNO
+     , e.ENAME
+     , e.SAL
+  FROM emp e
+ WHERE e.SAL >= 1000
+;
+
+-- 급여가 1000이상이고 2000미만인 직원의 사번, 이름, 급여를 조회
+SELECT e.EMPNO
+     , e.ENAME
+     , e.JOB
+     , e.SAL
+  FROM emp e
+ WHERE e.SAL >= 1000
+   AND e.SAL <2000
+;
+
+-- comm값이 0보다 큰 작원의 사번, 이름, 급여를 조회
+SELECT e.EMPNO
+     , e.ENAME
+     , e.SAL
+  FROM emp e
+ WHERE e.COMM > 0 
+;
