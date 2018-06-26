@@ -173,3 +173,5 @@ ANALYST
    FROM emp e
   ORDER BY e.comm, e.job, e.ename DESC
    ;
+
+-- 10) 
