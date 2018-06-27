@@ -307,3 +307,5 @@ SELECT e.EMPNO 사번
      , e.ENAME || '의 월급은 '|| e.SAL || ' 입니다.' as 월급여
   FROM emp e
 ;
+
+-- 푸시테스트
