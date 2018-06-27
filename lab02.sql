@@ -14,6 +14,13 @@ SELECT e.EMPNO
 BETWEEN 2500
     AND 3000
 ;
+/*
+EMPNO, ENAME, JOB, MGR, SAL, HIREDATE, COMM, DEPTNO
+------------------------------------------------------------
+7566	JONES	MANAGER	7839	2975	81/04/02		20
+7698	BLAKE	MANAGER	7839	2850	81/05/01		30
+7902	FORD	ANALYST	7566	3000	81/12/03		20
+*/
 
 -- 실습 24)
 SELECT e.EMPNO
@@ -27,6 +34,18 @@ SELECT e.EMPNO
   FROM emp e
  WHERE e.comm IS NULL
 ;
+/*
+EMPNO, ENAME, JOB, MGR, SAL, HIREDATE, COMM, DEPTNO
+------------------------------------------------------------
+7369	SMITH	CLERK	7902	800	80/12/17		20
+7566	JONES	MANAGER	7839	2975	81/04/02		20
+7698	BLAKE	MANAGER	7839	2850	81/05/01		30
+7782	CLARK	MANAGER	7839	2450	81/06/09		10
+7839	KING	PRESIDENT		5000	81/11/17		10
+7900	JAMES	CLERK	7698	950	81/12/03		30
+7902	FORD	ANALYST	7566	3000	81/12/03		20
+7934	MILLER	CLERK	7782	1300	82/01/23		10
+*/
 
 -- 실습 25)
 SELECT e.EMPNO
@@ -40,13 +59,36 @@ SELECT e.EMPNO
   FROM emp e
  WHERE e.comm IS NOT NULL
 ;
+/*
+EMPNO, ENAME, JOB, MGR, SAL, HIREDATE, COMM, DEPTNO
+--------------------------------------------------------------------
+7499	ALLEN	SALESMAN	7698	1600	81/02/20	300	30
+7521	WARD	SALESMAN	7698	1250	81/02/22	500	30
+7654	MARTIN	SALESMAN	7698	1250	81/09/28	1400	30
+7844	TURNER	SALESMAN	7698	1500	81/09/08	0	30
+*/
 
 -- 실습 26)
 SELECT e.EMPNO 사번
      , e.ENAME || '의 월급은 '|| e.SAL || ' 입니다.' as 월급여
   FROM emp e
 ;
-
+/*
+사번, 월급여
+-------------------------------------
+7369	SMITH의 월급은 800 입니다.
+7499	ALLEN의 월급은 1600 입니다.
+7521	WARD의 월급은 1250 입니다.
+7566	JONES의 월급은 2975 입니다.
+7654	MARTIN의 월급은 1250 입니다.
+7698	BLAKE의 월급은 2850 입니다.
+7782	CLARK의 월급은 2450 입니다.
+7839	KING의 월급은 5000 입니다.
+7844	TURNER의 월급은 1500 입니다.
+7900	JAMES의 월급은 950 입니다.
+7902	FORD의 월급은 3000 입니다.
+7934	MILLER의 월급은 1300 입니다.
+*/
 --------------------------------------------------------------------------------------
 
 -- 실습 1)
