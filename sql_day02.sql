@@ -397,3 +397,204 @@ SELECT nullif('AAA', 'AAA')
 ;
 -- 조회된 결과 1행이 NULL인 결과를 얻게 됨
 -- 1행이라도 NULL이 조회된 결과는 인출된 모든 행 : 0과는 상태가 다르다.
+
+--  3) 날짜함수 : 날짜 출력 패턴 조합으로 다양하게 출력 가능
+SELECT sysdate FROM dual;
+-- TO_CHAR() : 숫자나 날짜를 문자형으로 변환
+SELECT TO_CHAR(sysdate, 'YYYY') FROM dual;
+SELECT TO_CHAR(sysdate, 'YY') FROM dual;
+SELECT TO_CHAR(sysdate, 'MM') FROM dual;
+SELECT TO_CHAR(sysdate, 'MONTH') FROM dual;
+SELECT TO_CHAR(sysdate, 'MON') FROM dual;
+SELECT TO_CHAR(sysdate, 'DD') FROM dual;
+SELECT TO_CHAR(sysdate, 'D') FROM dual;
+SELECT TO_CHAR(sysdate, 'DAY') FROM dual;
+SELECT TO_CHAR(sysdate, 'DY') FROM dual;
+
+-- 패턴을 조합
+SELECT TO_CHAR(sysdate, 'YYYY-MM-DD') FROM daul;
+SELECT TO_CHAR(sysdate, 'FMYYYY-MM-DD') FROM daul;
+SELECT TO_CHAR(sysdate, 'YY-MONTH-DD') FROM daul;
+SELECT TO_CHAR(sysdate, 'YY-MONTH-DD DAY') FROM daul;
+SELECT TO_CHAR(sysdate, 'YY-MONTH-DD DY') FROM daul;
+
+/* 시간 패턴 :
+    HH : 시간을 두자리로 표기
+    MI : 분을 두자리로 표기
+    SS : 초를 두자리로 표기
+    HH24 : 시간을 24시간 체계로 표기
+    AM : 오전/오후 표기
+*/
+
+SELECT TO_CHAR(sysdate, 'YYYY-MM-DD HH24:MI:SS') FROM dual;
+SELECT TO_CHAR(sysdate, 'YYYY-MM-DD AM HH:MI:SS') FROM dual;
+
+-- 날짜 값과 숫자의 연산 : +, - 연산 가능
+SELECT sysdate + 10 FROM dual; -- 10일 후
+SELECT sysdate - 10 FROM daul; -- 10일 전
+SELECT sysdate + (10/24) FROM dual; -- 10시간 후
+
+SELECT to_char(sysdate + (10/24), 'YY-MM-DD HH24:MI:SS') FROM dual;
+
+--  1. MONTHS_BETWEEN(날짜1, 날짜2) : 두 날짜 사이의 개월수 차
+SELECT months_between(sysdate, e.hiredate)
+  FROM emp e
+;
+
+--  2. ADD_MONTHS(날짜1, 숫자) : 날짜1에 숫자만큼 더한 후의 날짜
+SELECT add_months(sysdate, 3) FROM dual;
+
+--  3. NEXT_DAY, LAST_DAY : 다음 요일에 해당하는 날짜, 이달의 마지막 날짜
+SELECT next_day(sysdate, '일요일') FROM dual; -- 요일을 문자로 입력했을 때
+SELECT next_day(sysdate, 1) FROM dual; -- 요일을 숫자로 입력해도 작동
+SELECT last_day(sysdate) FROM dual;
+
+--  4. ROUND, TRUNC : 날짜 관련 반올림, 버림
+SELECT round(sysdate) FROM dual;
+SELECT to_char(round(sysdate), 'YYYY-MM-DD HH24:MI:SS') FROM dual;
+SELECT trunc(sysdate) FROM dual;
+SELECT to_char(trunc(sysdate), 'YYYY-MM-DD HH24:MI:SS') FROM dual;
+
+-- 4) 데이터 타입 변환 함수
+/*
+TO_CHAR()   : 숫자, 날짜 --> 문자
+TO_DATE()   : 날짜 형식의 문자 --> 날짜
+TO_NUMBER() : 숫자로만 구성된 문자데이터 --> 숫자
+*/
+
+-- 1. TO_CHAR() : 숫자패턴 적용
+--   숫자패턴 9 : --> 한자리 숫자
+SELECT to_char(12345, '9999') FROM dual;
+SELECT to_char(12345, '99999') FROM dual;
+
+SELECT e.empno
+     , e.sal
+  FROM emp e
+; -- 숫자는 오른쪽 정렬
+SELECT e.empno
+     , to_char(e.sal)
+  FROM emp e
+; -- 문자는 왼쪽 정렬
+SELECT to_char(12345, '999999999') data
+  FROM dual
+;
+
+-- 앞 빈칸에 0채우기
+SELECT to_char(12345, '099999999') data
+  FROM dual
+;
+-- 소수점 이하 표현
+SELECT to_char(12345, '99999999.99') data
+  FROM dual
+;
+-- 숫자패턴에서 3자리씩 끊고 소수점 이하 표현
+SELECT to_char(12345, '999,999,999.99') data
+  FROM dual
+;
+
+-- 2. TO_DATE() : 날짜 패턴에 맞는 문자값을 날짜데이터로 변경
+SELECT to_date('2018-06-27', 'YYYY-MM-DD') today FROM dual;
+SELECT '2018-06-27' today FROM dual;
+
+SELECT to_date('2018-06-27', 'YYYY-MM-DD') + 10 today FROM dual;
+-- 10일 후의 날짜 결과 얻음 : 18/07/07
+SELECT '2018-06-27' + 10 today FROM dual;
+-- ORA-01722: invalid number --> 문자 + 숫자 10의 연산 불가
+
+-- 3. TO_NUMBER() : 오라클이 자동 형변환을 제공하므로 자주 사용은 안됨
+SELECT '1000' + 10 result FROM dual;
+SELECT to_number('1000') + 10 result FROM dual;
+
+--  5) DECODE(expr, search, result [,search, result].. [, dafault])
+/*
+  만약에 default가 없고 expr과 일치하는 search가 없으면 null을 리턴
+*/
+SELECT decode('YES' --expr
+            , 'YES', '입력값이 YES입니다.' -- search, result 세트1
+            , 'NO', '입력값이 NO입니다.' -- search, result 세트2
+            ) as result
+  FROM dual
+;
+SELECT decode('NO' --expr
+            , 'YES', '입력값이 YES입니다.' -- search, result 세트1
+            , 'NO', '입력값이 NO입니다.' -- search, result 세트2
+            ) as result
+  FROM dual
+;
+SELECT decode('예' --expr
+            , 'YES', '입력값이 YES입니다.' -- search, result 세트1
+            , 'NO', '입력값이 NO입니다.' -- search, result 세트2
+            ) as result
+  FROM dual
+;
+-->> expr와 일치하는 search가 없고 default값도 없을 때 결과가 <인출된 모든 행 : 0>이 아니고 null이다.
+
+SELECT decode('예' --expr
+            , 'YES', '입력값이 YES입니다.' -- search, result 세트1
+            , 'NO', '입력값이 NO입니다.' -- search, result 세트2
+            , '입력값이 YES/NO 중 어느것도 아닙니다.'
+            ) as result
+  FROM dual
+;
+
+-- emp테이블에서 hiredate의 입사년도를  추출하여 몇년 근무했는지 계산
+-- 장기근속 여부를 판단
+-- 1) 입사년도 추출 : 날짜 패턴
+SELECT e.empno
+     , e.ename
+     , to_char(e.hiredate, 'YYYY') hireyear
+  FROM emp e
+;
+
+-- 2) 몇년 근무했는지 판단 : 오늘 시스템 날짜와 연산
+SELECT e.empno
+     , e.ename
+     , to_char(sysdate, 'YYYY') - to_char(e.hiredate, 'YYYY') "근무햇수"
+  FROM emp e
+;
+
+-- 3) 37년 이상 된 직원만 장기근속자로 판단.
+SELECT a.empno
+     , a.ename -- expr
+     , a.workingyear
+     , decode(a.workingyear, 37, '장기근속자 입니다.' -- search, result1
+                           , 38, '장기근속자 입니다.' -- search, result2
+                           ,'장기근속자가 아닙니다.') as "장기근속여부" --default
+  FROM (SELECT e.empno
+             , e.ename
+             , to_char(sysdate, 'YYYY') - to_char(e.hiredate, 'YYYY') workingyear
+  FROM emp e) a
+;
+
+-- job 별로 경조사비를 급여대비 일정 비율로 지급하고 있다.
+-- 각 직원들의 경조사비 지원금을 구하자
+/*
+CLERK    : 5%
+SALESMAN : 4%
+MANAGER  : 3.7%
+ANALYST  : 3%
+PRESIDENT: 1.5%
+*/
+SELECT e.empno
+     , e.ename
+     , decode(e.job --expr
+            , 'CLERK', e.sal * 0.05
+            , 'SALESMAN', e.sal * 0.04
+            , 'MANAGER', e.sal * 0.037
+            , 'ANALYST', e.sal * 0.03
+            , 'PRESIDENT', e.sal * 0.015) as "경조사비 지원금"
+  FROM emp e
+;
+
+-- 출력결과에 숫자패턴 적용
+SELECT e.empno
+     , e.ename
+     , to_char(decode(e.job --expr
+            , 'CLERK', e.sal * 0.05
+            , 'SALESMAN', e.sal * 0.04
+            , 'MANAGER', e.sal * 0.037
+            , 'ANALYST', e.sal * 0.03
+            , 'PRESIDENT', e.sal * 0.015),'$999.99') as "경조사비 지원금"
+  FROM emp e
+;
+
