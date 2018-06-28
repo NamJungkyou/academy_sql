@@ -190,3 +190,101 @@ SELECT MAX(e.ENAME)
   FROM emp e
 ;
 
+
+
+
+-- 만약 GROUP BY절에 등장하지 않은 컬럼이 SELECT절에 등장하면 오류, 실행불가
+SELECT e.DEPTNO
+     , sum(e.SAL)
+  FROM emp e
+ GROUP BY e.DEPTNO
+;
+
+-- 부서별 급여의 총합, 평균, 최대급여, 최소급여를 구하자
+SELECT SUM(e.SAL) "급여 총합"
+     , AVG(e.SAL) "급여 평균"
+     , MAX(e.SAL) "최대 급여"
+     , MIN(e.SAL) "최소 급여"
+  FROM emp e
+ GROUP BY e.DEPTNO
+;
+-- 위의 쿼리는 실행은 되지만 어느 부서의 결과인지 정확히 알 수 없다.
+/*-----------------------------------------------
+ GROUP BY절에 등장하는 그룹화 기준 컬럼은 반드시 SELECT절에 똑같이 등장해야한다.
+ 
+ 하지만 위의 쿼리가 실행되는 이유는
+ SELECT절에 나열된 컬럼중에서 그룹함수가 사용되지 않은 컬럼이 없기 때문이다.
+ 즉, 모두 다 그룹함수가 사용된 컬럼들이다.
+------------------------------------------*/
+
+SELECT e.DEPTNO "부서 번호"
+     , SUM(e.SAL) "급여 총합"
+     , AVG(e.SAL) "급여 평균"
+     , MAX(e.SAL) "최대 급여"
+     , MIN(e.SAL) "최소 급여"
+  FROM emp e
+ GROUP BY e.DEPTNO
+ ORDER BY e.DEPTNO
+;
+
+
+-- 결과 숫자패턴 씌우기
+SELECT e.DEPTNO "부서 번호"
+     , to_char(SUM(e.SAL), '9,999.00') "급여 총합"
+     , to_char(AVG(e.SAL), '9,999.00') "급여 평균"
+     , to_char(MAX(e.SAL), '9,999.00') "최대 급여"
+     , to_char(MIN(e.SAL), '9,999.00') "최소 급여"
+  FROM emp e
+ GROUP BY e.DEPTNO
+ ORDER BY e.DEPTNO
+;
+
+-- 부서별, 직무별 급여의 총합, 평균, 최대, 최소를 구해보자
+
+SELECT e.DEPTNO "부서 번호"
+     , JOB "직무"
+     , SUM(e.SAL) "급여 총합"
+     , AVG(e.SAL) "급여 평균"
+     , MAX(e.SAL) "최대 급여"
+     , MIN(e.SAL) "최소 급여"
+  FROM emp e
+ GROUP BY e.DEPTNO, e.JOB
+ ORDER BY e.DEPTNO, e.JOB
+;
+
+-- 오류코드 ORA-00979: not a GROUP BY expression
+SELECT e.DEPTNO "부서 번호"
+     , JOB "직무"              -- SELECT절에 등장
+     , SUM(e.SAL) "급여 총합"
+     , AVG(e.SAL) "급여 평균"
+     , MAX(e.SAL) "최대 급여"
+     , MIN(e.SAL) "최소 급여"
+  FROM emp e
+ GROUP BY e.DEPTNO             -- GROUP BY절에 누락
+ ORDER BY e.DEPTNO, e.JOB
+;
+-- 그룹함수가 적용되지 않았고, GROUP BY절에도 등장하지 않은 JOB컬럼이
+-- SELECT절에 있기 때문에 오류가 발생
+
+-- 오류코드 ORA-00937: not a single-group group function
+SELECT e.DEPTNO "부서 번호"
+     , JOB "직무"              -- SELECT절에 등장
+     , SUM(e.SAL) "급여 총합"
+     , AVG(e.SAL) "급여 평균"
+     , MAX(e.SAL) "최대 급여"
+     , MIN(e.SAL) "최소 급여"
+  FROM emp e
+-- GROUP BY e.DEPTNO             -- GROUP BY절 누락
+;
+-- 그룹함수가 적용되지 않은 컬럼들이 SELECT에 등장하면 그룹화 기준으로 가정되어야 한다.
+-- 그룹화 기준으로 사용되는 GROUP BY절 자체가 누락
+
+-- job별 급여의 총합, 평균, 최대, 최소를 구해보자
+SELECT nvl(e.JOB, '직무 없음') 직무
+     , to_char(SUM(e.SAL), '$9,999') "총합"
+     , to_char(AVG(e.SAL), '$9,999') "평균"
+     , to_char(MAX(e.SAL), '$9,999') "최대"
+     , to_char(MIN(e.SAL), '$9,999') "최소"
+  FROM emp e
+ GROUP BY e.JOB
+;
