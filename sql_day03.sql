@@ -288,3 +288,202 @@ SELECT nvl(e.JOB, '직무 없음') 직무
   FROM emp e
  GROUP BY e.JOB
 ;
+
+SELECT nvl(e.DEPTNO||'','미배정') "부서 번호"
+     , to_char(SUM(e.SAL), '9,999.00') "급여 총합"
+     , to_char(AVG(e.SAL), '9,999.00') "급여 평균"
+     , to_char(MAX(e.SAL), '9,999.00') "최대 급여"
+     , to_char(MIN(e.SAL), '9,999.00') "최소 급여"
+  FROM emp e
+ GROUP BY e.DEPTNO
+ ORDER BY e.DEPTNO
+;
+SELECT DECODE(e.DEPTNO, null, '미배정'
+                      , e.DEPTNO) "부서 번호"
+     , to_char(SUM(e.SAL), '9,999.00') "급여 총합"
+     , to_char(AVG(e.SAL), '9,999.00') "급여 평균"
+     , to_char(MAX(e.SAL), '9,999.00') "최대 급여"
+     , to_char(MIN(e.SAL), '9,999.00') "최소 급여"
+  FROM emp e
+ GROUP BY e.DEPTNO
+ ORDER BY e.DEPTNO
+;
+SELECT DECODE(nvL(e.DEPTNO, 0), 0, '미배정'
+                              , e.DEPTNO) "부서 번호"
+     , to_char(SUM(e.SAL), '9,999.00') "급여 총합"
+     , to_char(AVG(e.SAL), '9,999.00') "급여 평균"
+     , to_char(MAX(e.SAL), '9,999.00') "최대 급여"
+     , to_char(MIN(e.SAL), '9,999.00') "최소 급여"
+  FROM emp e
+ GROUP BY e.DEPTNO
+ ORDER BY e.DEPTNO
+;
+
+--  4. HAVING절의 사용
+--  GROUP BY 결과에 조건을 걸어 겨과를 제한(필터링)할 목적으로 사용되는 절
+
+-- 문제 ) 부서별 급여 평균이 2500이상인 부서
+-- a) 우선 부서별 급여 평균을 구한다.
+SELECT e.DEPTNO "부서 번호"
+     , AVG(e.SAL) "급여 평균"
+  FROM emp e
+ GROUP BY e.DEPTNO
+;
+
+-- b) a의 결과에서 2000이상인 부서만 남긴다
+SELECT e.DEPTNO "부서 번호"
+     , AVG(e.SAL) "급여 평균"
+  FROM emp e
+ GROUP BY e.DEPTNO
+HAVING "급여 평균" >= 2000
+;
+-- 오류코드 : ORA-00904: "급여 평균": invalid identifier
+--            HAVING의 조건에 별칭 사용불가
+
+SELECT e.DEPTNO "부서 번호"
+     , AVG(e.SAL) "급여 평균"
+  FROM emp e
+ GROUP BY e.DEPTNO
+HAVING AVG(e.SAL) >= 2000
+;
+
+--------------------------------------------------------------
+-- 수업중 실습
+-- 1. 매니저별, 부하직원의 수를 구하고, 많은 순으로 정렬
+SELECT e.mgr 매니저번호, count(e.mgr) "부하직원 수"
+  FROM emp e
+ GROUP BY e.mgr
+ HAVING e.mgr IS NOT NULL
+ ORDER BY "부하직원 수" DESC
+ ;
+
+-- 2. 부서별 인원을 구하고, 인원수 많은 순으로 정렬
+SELECT nvl(e.DEPTNO||'', '미배정') 부서번호
+     , count(e.deptno) 인원
+  FROM emp e
+ GROUP BY nvl(e.DEPTNO||'', '미배정')
+ ORDER BY 인원 DESC
+ ;
+
+-- 3. 직무별 급여 평균을 구하고, 급여 평균이 높은 순으로 정렬
+SELECT e.job 직무
+     , AVG(e.sal) "급여 평균"
+  FROM emp e
+ GROUP BY e.job
+ ORDER BY "급여 평균" DESC
+;
+-- null 처리
+SELECT nvl(e.job, '미배정') 직무
+     , AVG(e.sal) "급여 평균"
+  FROM emp e
+ GROUP BY nvl(e.job, '미배정')
+ ORDER BY "급여 평균" DESC
+;
+
+-- 4. 직무별 급여 총합을 구하고, 총합이 높은 순으로 정렬
+SELECT e.job 직무
+     , SUM(e.sal) "급여 총합"
+  FROM emp e
+ GROUP BY e.job
+ ORDER BY "급여 총합" DESC
+;
+-- null처리
+SELECT nvl(e.job, '미배정') 직무
+     , SUM(e.sal) "급여 총합"
+  FROM emp e
+ GROUP BY nvl(e.job, '미배정')
+ ORDER BY "급여 총합" DESC
+;
+
+-- 5. 급여의 앞단위가 1000미만, 1000, 2000, 3000, 5000 별로 인원수를 구하고 급여단위 오름차순으로 정렬
+SELECT CASE WHEN e.sal < 999 THEN '1000미만'
+            WHEN e.sal BETWEEN 1000 AND 1999 THEN '1000'
+            WHEN e.sal BETWEEN 2000 AND 2999 THEN '2000'
+            WHEN e.sal BETWEEN 3000 AND 3999 THEN '3000'
+            WHEN e.sal BETWEEN 5000 AND 5999 THEN '5000'
+       END as 급여단위
+     , COUNT(CASE WHEN e.sal < 999 THEN '1000미만'
+            WHEN e.sal BETWEEN 1000 AND 1999 THEN '1000'
+            WHEN e.sal BETWEEN 2000 AND 2999 THEN '2000'
+            WHEN e.sal BETWEEN 3000 AND 3999 THEN '3000'
+            WHEN e.sal BETWEEN 5000 AND 5999 THEN '5000'
+       END) as 인원수
+  FROM emp e
+  GROUP BY CASE WHEN e.sal < 999 THEN '1000미만'
+                WHEN e.sal BETWEEN 1000 AND 1999 THEN '1000'
+                WHEN e.sal BETWEEN 2000 AND 2999 THEN '2000'
+                WHEN e.sal BETWEEN 3000 AND 3999 THEN '3000'
+                WHEN e.sal BETWEEN 5000 AND 5999 THEN '5000'
+           END
+  ORDER BY 급여단위
+;
+----********************* TRUNC()활용 **********************---------
+-- a. 급여단위 구하기
+SELECT e.EMPNO
+     , e.ENAME
+     , TRUNC(e.SAL, -3) as 급여단위
+  FROM emp e
+;
+-- b. TRUNC로 얻어낸 급여단위를 COUNT
+SELECT TRUNC(e.SAL, -3) as 급여단위
+     , COUNT(TRUNC(e.SAL, -3))
+  FROM emp e
+ GROUP BY TRUNC(e.SAL, -3)
+ ORDER BY 급여단위
+;
+-- c. 급여 단위가 1000미만일 때 0으로 출력되는 것을 변경
+--    범위연산 필요 --> CASE 구문
+SELECT CASE WHEN TRUNC(e.SAL, -3) <1000 THEN '1000 미만'
+            ELSE TRUNC(e.SAL, -3) || ''
+       END as 급여단위
+  FROM emp e
+ GROUP BY TRUNC(e.SAL, -3)
+ ORDER BY TRUNC(e.SAL, -3)
+;
+
+-- 6. 직무별 급여 합의 단위를 구하고, 급여 합의 단위가 큰 순으로 정렬
+SELECT e.job 직무
+     , CASE WHEN sum(e.sal) < 999 THEN '1000미만'
+            WHEN sum(e.sal) BETWEEN 1000 AND 1999 THEN '1000'
+            WHEN sum(e.sal) BETWEEN 2000 AND 2999 THEN '2000'
+            WHEN sum(e.sal) BETWEEN 3000 AND 3999 THEN '3000'
+            WHEN sum(e.sal) BETWEEN 4000 AND 4999 THEN '4000'
+            WHEN sum(e.sal) BETWEEN 5000 AND 5999 THEN '5000'
+            WHEN sum(e.sal)>= 6000 THEN '6000이상'
+       END as 급여합단위
+  FROM emp e
+ GROUP BY e.job 
+ ORDER BY 급여합단위 DESC
+;
+--**************** TRUNC() 이용**********************-------
+SELECT nvl(e.job, '미배정') 직무
+     , TRUNC(SUM(e.sal), -3) as 급여단위
+  FROM emp e
+ GROUP BY nvl(e.job, '미배정')
+ ORDER BY 급여단위 DESC
+ ;
+-- 7. 직무별 급여 평균이 2000이하인 경우를 구하고 평균이 높은 순으로 정렬
+SELECT e.job 직무, AVG(e.sal) "급여 평균"
+  FROM emp e
+ GROUP BY e.job
+ HAVING AVG(e.sal)<=2000
+ ORDER BY "급여 평균" DESC
+;
+-- 8. 연도별 입사인원을 구하시오
+SELECT e.HIREDATE 입사년도, COUNT(e.HIREDATE) 입사인원
+  FROM emp e
+ GROUP BY e.HIREDATE
+;
+-- 9. 연도별 월별 입사 인원을 구하시오
+SELECT to_char(e.hiredate, 'YYYY') 입사년도, COUNT(e.HIREDATE) 입사인원
+  FROM emp e
+ GROUP BY to_char(e.hiredate, 'YYYY')
+;
+SELECT to_char(e.hiredate, 'MM') 입사월, COUNT(e.HIREDATE) 입사인원
+  FROM emp e
+ GROUP BY to_char(e.hiredate, 'MM')
+;
+SELECT to_char(e.hiredate, 'YYYY/MM') "입사년/월", COUNT(e.HIREDATE) 입사인원
+  FROM emp e
+ GROUP BY to_char(e.hiredate, 'YYYY/MM')
+;
