@@ -339,7 +339,15 @@ HAVING "급여 평균" >= 2000
 ;
 -- 오류코드 : ORA-00904: "급여 평균": invalid identifier
 --            HAVING의 조건에 별칭 사용불가
-
+-- HAVING절이 존재할때 SELECT구문의 실행 순서 정리
+/*
+ 1. FROM절의 테이블 각 행을 대상으로
+ 2. WHERE절의 조건에 맞는 행만 선택하고
+ 3. GROUP BY절에 나온 컬럼, 식(함수 식 등)으로 그룹화를 진행
+ 4. HAVING절의 조건을 만족시키는 그룹행만 선택
+ 5. 4까지 선택된 그룹정보를 가진 행에 대해서 SELECT절에 명시된 컬럼, 식(함수 식 등)만 출력
+ 6. ORDER BY가 있다면 정렬 조건에 맞추어 최종정렬하여 보여준다.
+*/
 SELECT e.DEPTNO "부서 번호"
      , AVG(e.SAL) "급여 평균"
   FROM emp e
@@ -350,10 +358,10 @@ HAVING AVG(e.SAL) >= 2000
 --------------------------------------------------------------
 -- 수업중 실습
 -- 1. 매니저별, 부하직원의 수를 구하고, 많은 순으로 정렬
-SELECT e.mgr 매니저번호, count(e.mgr) "부하직원 수"
+SELECT e.mgr 매니저번호, COUNT(e.mgr) "부하직원 수"
   FROM emp e
  GROUP BY e.mgr
- HAVING e.mgr IS NOT NULL
+HAVING e.mgr IS NOT NULL
  ORDER BY "부하직원 수" DESC
  ;
 
@@ -440,7 +448,27 @@ SELECT CASE WHEN TRUNC(e.SAL, -3) <1000 THEN '1000 미만'
  GROUP BY TRUNC(e.SAL, -3)
  ORDER BY TRUNC(e.SAL, -3)
 ;
-
+--------**************다른 풀이***************------------
+-- a) sal컬럼에 왼쪽으로 패딩을 붙여서 0을 채우고 맨 앞글자를 잘라냄 --> 단위 구함
+SELECT e.EMPNO
+     , e.ENAME
+     , SUBSTR(LPAD(e.SAL, 4, '0'),1 ,1)
+  FROM emp e
+;
+-- b) 1000단위로 처리 + COUNT + 그룹화
+SELECT SUBSTR(LPAD(e.SAL, 4, '0'),1 ,1) "급여단위"
+     , COUNT(*) 인원
+  FROM emp e
+ GROUP BY SUBSTR(LPAD(e.SAL, 4, '0'),1 ,1)
+;
+-- c) 1000단위로 출력형태 변경
+SELECT CASE WHEN SUBSTR(LPAD(e.SAL, 4, '0'),1 ,1) = 0 THEN '1000 미만'
+            ELSE TO_CHAR(SUBSTR(LPAD(e.SAL, 4, '0'),1 ,1) * 1000)
+       END as 급여단위
+  FROM emp e
+ GROUP BY SUBSTR(LPAD(e.SAL, 4, '0'),1 ,1)
+ ORDER BY SUBSTR(LPAD(e.SAL, 4, '0'),1 ,1) DESC
+;
 -- 6. 직무별 급여 합의 단위를 구하고, 급여 합의 단위가 큰 순으로 정렬
 SELECT e.job 직무
      , CASE WHEN sum(e.sal) < 999 THEN '1000미만'
@@ -462,6 +490,7 @@ SELECT nvl(e.job, '미배정') 직무
  GROUP BY nvl(e.job, '미배정')
  ORDER BY 급여단위 DESC
  ;
+ 
 -- 7. 직무별 급여 평균이 2000이하인 경우를 구하고 평균이 높은 순으로 정렬
 SELECT e.job 직무, AVG(e.sal) "급여 평균"
   FROM emp e
@@ -470,20 +499,205 @@ SELECT e.job 직무, AVG(e.sal) "급여 평균"
  ORDER BY "급여 평균" DESC
 ;
 -- 8. 연도별 입사인원을 구하시오
-SELECT e.HIREDATE 입사년도, COUNT(e.HIREDATE) 입사인원
+--     : hiredate활용 --> 년도만 추출하여 그룹화 기준으로 사용
+--     a) hiredate에서 년도 추출 : to_char()
+--     b) 기준값으로 그룹화 작성
+SELECT to_char(e.HIREDATE, 'YYYY') 입사년도
+     , COUNT(e.HIREDATE) 입사인원
   FROM emp e
- GROUP BY e.HIREDATE
+ GROUP BY to_char(e.HIREDATE, 'YYYY')
+ ORDER BY 입사년도
 ;
 -- 9. 연도별 월별 입사 인원을 구하시오
-SELECT to_char(e.hiredate, 'YYYY') 입사년도, COUNT(e.HIREDATE) 입사인원
+-- a) hiredate에서 년도, 월 추출 
+SELECT to_char(e.hiredate, 'YYYY') 입사년도
+     , to_char(e.hiredate, 'MM') 입사월
+     , COUNT(e.HIREDATE) 인원
   FROM emp e
- GROUP BY to_char(e.hiredate, 'YYYY')
+ GROUP BY to_char(e.hiredate, 'YYYY'), to_char(e.hiredate, 'MM')
+ ORDER BY 입사년도, 입사월
 ;
-SELECT to_char(e.hiredate, 'MM') 입사월, COUNT(e.HIREDATE) 입사인원
-  FROM emp e
- GROUP BY to_char(e.hiredate, 'MM')
-;
+
 SELECT to_char(e.hiredate, 'YYYY/MM') "입사년/월", COUNT(e.HIREDATE) 입사인원
   FROM emp e
  GROUP BY to_char(e.hiredate, 'YYYY/MM')
+ ORDER BY "입사년/월"
 ;
+
+----------------------------------------------------------------------------------------
+-- 년도별, 월별 입사인원을 가로 표 형태로 출력
+-- a) 년도 추출, 월 추출
+--    to_char(e.hiredate, 'YYYY'), to_char(e.hiredate, 'MM')
+-- b) hiredate에서 월을 추출한 값이 01이 나오면 그때의 숫자만 1월에서 카운트
+--    이 과정을 반복
+
+SELECT to_char(e.hiredate, 'YYYY') 입사년도 -- 그룹화 기준 컬럼
+     , DECODE(to_char(e.hiredate, 'MM'), '01', 1) "1월"
+     , DECODE(to_char(e.hiredate, 'MM'), '02', 1) "2월"
+     , DECODE(to_char(e.hiredate, 'MM'), '03', 1) "3월"
+     , DECODE(to_char(e.hiredate, 'MM'), '04', 1) "4월"
+     , DECODE(to_char(e.hiredate, 'MM'), '05', 1) "5월"
+     , DECODE(to_char(e.hiredate, 'MM'), '06', 1) "6월"
+     , DECODE(to_char(e.hiredate, 'MM'), '07', 1) "7월"
+     , DECODE(to_char(e.hiredate, 'MM'), '08', 1) "8월"
+     , DECODE(to_char(e.hiredate, 'MM'), '09', 1) "9월"
+     , DECODE(to_char(e.hiredate, 'MM'), '10', 1) "10월"
+     , DECODE(to_char(e.hiredate, 'MM'), '11', 1) "11월"
+     , DECODE(to_char(e.hiredate, 'MM'), '12', 1) "12월"
+  FROM emp e
+ ORDER BY 입사년도
+;
+
+-- c) 입사년도 기준으로 COUNT함수 결과를 그룹화
+SELECT to_char(e.hiredate, 'YYYY') 입사년도 -- 그룹화 기준 컬럼
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '01', 1)) "1월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '02', 1)) "2월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '03', 1)) "3월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '04', 1)) "4월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '05', 1)) "5월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '06', 1)) "6월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '07', 1)) "7월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '08', 1)) "8월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '09', 1)) "9월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '10', 1)) "10월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '11', 1)) "11월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '12', 1)) "12월"
+  FROM emp e
+ GROUP BY to_char(e.hiredate, 'YYYY')
+ ORDER BY 입사년도
+;
+
+SELECT to_char(e.hiredate, 'YYYY') 입사년도 -- 그룹화 기준 컬럼
+     , DECODE(COUNT(DECODE(to_char(e.hiredate, 'MM'), '01', 1))
+     , 0, '-'
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '01', 1)))"1월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '02', 1)) "2월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '03', 1)) "3월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '04', 1)) "4월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '05', 1)) "5월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '06', 1)) "6월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '07', 1)) "7월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '08', 1)) "8월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '09', 1)) "9월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '10', 1)) "10월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '11', 1)) "11월"
+     , COUNT(DECODE(to_char(e.hiredate, 'MM'), '12', 1)) "12월"
+  FROM emp e
+ GROUP BY to_char(e.hiredate, 'YYYY')
+ ORDER BY 입사년도
+;
+
+SELECT SUM(COUNT(DECODE(to_char(e.hiredate, 'MM'), '01', 1))) "1월"
+     , SUM(COUNT(DECODE(to_char(e.hiredate, 'MM'), '02', 1))) "2월"
+     , SUM(COUNT(DECODE(to_char(e.hiredate, 'MM'), '03', 1))) "3월"
+     , SUM(COUNT(DECODE(to_char(e.hiredate, 'MM'), '04', 1))) "4월"
+     , SUM(COUNT(DECODE(to_char(e.hiredate, 'MM'), '05', 1))) "5월"
+     , SUM(COUNT(DECODE(to_char(e.hiredate, 'MM'), '06', 1))) "6월"
+     , SUM(COUNT(DECODE(to_char(e.hiredate, 'MM'), '07', 1))) "7월"
+     , SUM(COUNT(DECODE(to_char(e.hiredate, 'MM'), '08', 1))) "8월"
+     , SUM(COUNT(DECODE(to_char(e.hiredate, 'MM'), '09', 1))) "9월"
+     , SUM(COUNT(DECODE(to_char(e.hiredate, 'MM'), '10', 1))) "10월"
+     , SUM(COUNT(DECODE(to_char(e.hiredate, 'MM'), '11', 1))) "11월"
+     , SUM(COUNT(DECODE(to_char(e.hiredate, 'MM'), '12', 1))) "12월"
+  FROM emp e
+ GROUP BY to_char(e.hiredate, 'MM')
+;
+
+--  7. 조인과 서브쿼리
+--  (1) 조인
+-- 1) 조인 개요 : JOIN
+--              하나 이상의 테이블을 논리적으로 묶어서 하나의 테이블처럼 다루는 기술
+--              FROM절에 조인에 사용할 테이블명을 나열
+
+-- 문제) 직원의 소속 부서번호가 아닌 부서명을 알고싶다.
+-- a) FROM절에 emp, dept 두 테이블을 나열 --> 조인 발생 --> 카티션 곱 --> 두 테이블의 모든 조합
+SELECT e.ename
+     , e.deptno
+     , '|'
+     , d.deptno
+     , d.dname
+  FROM emp e
+     , dept d
+;
+-- 16 x 4 = 64 : emp테이블의 16건 x dept테이블의 4건 = 64건
+-- b) 조건이 추가 되어야 직원의 소속 부서만 정확하게 알 수 있다.
+
+SELECT e.ename
+     , d.dname
+  FROM emp e
+     , dept d
+ WHERE e.deptno = d.deptno
+;
+
+SELECT e.ename
+     , d.dname
+  FROM emp e JOIN dept d ON e.deptno = d.deptno
+ ORDER BY d.DEPTNO
+;
+--  조인 조건이 적절히 추가되어 12행의 의미있는 데이터만 남김
+
+-- 문제) 위의 결과에서 ACCOUNTING부서의 직원만 알고싶다.
+--       조인조건과 일반조건을 함께 사용가능
+SELECT e.ename
+     , d.dname
+  FROM emp e
+     , dept d
+ WHERE e.deptno = d.deptno
+   AND d.dname='ACCOUNTING'
+;
+SELECT e.ename
+     , d.dname
+  FROM emp e JOIN dept d ON e.deptno = d.deptno
+ WHERE d.dname='ACCOUNTING'
+;
+--  2) 조인 : 카티션 곱
+--            조인 대상 테이블의 데이터를 가능한 모든 조합으로 엮는 것
+--            조인 조건 누락시 발생
+--            9i 버전 이후 CROSS JOIN 키워드 지원
+SELECT e.ENAME
+     , d.DNAME
+     , s.GRADE
+  FROM emp e CROSS JOIN dept d
+             CROSS JOIN salgrade s
+;
+SELECT e.ENAME
+     , d.DNAME
+     , s.GRADE
+  FROM emp e
+     , dept d
+     , salgrade s
+;
+-- emp 16 x dept 4 x grade 5 = 320 
+
+-- 3) EQUI JOIN : 조인의 가장 기본형태
+--                서로 다른 테이블의 공통 컬럼을 '='로 연결
+--                공통 컬럼(join attribute)이라고 부름
+
+--  1. 오라클의 전통적인 WHERE에 조인 조건을 걸어주는 방법
+SELECT e.ENAME
+     , d.DNAME
+  FROM emp e
+     , dept d
+ WHERE e.deptno = d.deptno
+ ORDER BY e.deptno
+;
+--  2. NATURAL JOIN 키워드로 자동 조인
+SELECT e.ENAME
+     , d.DNAME
+  FROM emp e NATURAL JOIN dept d -- 조인 공통 컬럼 명사가 필요없음
+;
+
+--  3. JOIN ~ USING 키워드로 조인
+SELECT e.ENAME
+     , d.DNAME
+  FROM emp e JOIN dept d USING(deptno) -- USING뒤에 공통 컬럼을 별칭없이 명시
+;
+
+--  4. JOIN ~ ON 키워드로 조인
+SELECT e.ENAME
+     , d.DNAME
+  FROM emp e JOIN dept d ON e.deptno = d.deptno
+;
+
+
+-- (2) 서브쿼리
