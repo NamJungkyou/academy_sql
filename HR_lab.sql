@@ -1,20 +1,39 @@
 --1. employees 테이블에서 job_id 를 중복 배제하여 조회 하고
 --   job_title 같이 출력
 --19건
-
+SELECT DISTINCT e.job_id "job_title"
+  FROM employees e
+;
 
 --2. employees 테이블에서 사번, 라스트네임, 급여, 커미션 팩터,
 --   급여x커미션팩터(null 처리) 조회
 --   커미션 컬럼에 대해 null 값이면 0으로 처리하도록 함
 --107건
- 
+SELECT e.employee_id
+     , e.last_name
+     , e.salary
+     , nvl(e.commission_pct, 0) as "COMMISSION_PCT"
+     , e.salary * nvl(e.commission_pct, 0) as "급여x커미션팩터"
+  FROM employees e
+;
 --3. employees 테이블에서 사번, 라스트네임, 급여, 커미션 팩터(null 값 처리) 조회
 --   단, 2007년 이 후 입사자에 대하여 조회, 고용년도 순 오름차순 정렬
 --30건
-
+SELECT e.employee_id
+     , e.last_name
+     , e.salary
+     , nvl(e.commission_pct, 0) as "COMMISSION_PCT"
+     , e.hire_date
+  FROM employees e
+ WHERE e.hire_date < to_date('07/01/01','YY/MM/DD')
+ ORDER BY e.hire_date
+;
 --4. Finance 부서에 소속된 직원의 목록 조회
 --조인으로 해결
-
+SELECT *
+  FROM employee e
+  JOIN department d
+;
 
 
 --서브쿼리로 해결
@@ -64,11 +83,11 @@
 
 
 --14. employees 테이블이 각 job_id 별 인원수와 job_title을 같이 출력하고 job_id 오름차순 정렬
-
+-- 19건
 
 --15. employees 테이블의 job_id별 최저급여,
 --   최대급여를 job_title과 함께 출력 job_id 알파벳순 오름차순 정렬
-
+-- 19건
 
  
 --16. Employees 테이블에서 인원수가 가장 많은 job_id를 구하고
@@ -80,23 +99,23 @@
 --17.사번,last_name, 급여, 직책이름(job_title), 부서명(department_name), 부서매니저이름
 --  부서 위치 도시(city), 나라(country_name), 지역(region_name) 을 출력
 ----------- 부서가 배정되지 않은 인원 고려 ------
-
+-- 107건
 
 --18.부서 아이디, 부서명, 부서에 속한 인원숫자를 출력
-
+-- 27건
 
 
 --19.인원이 가장 많은 상위 다섯 부서아이디, 부서명, 인원수 목록 출력
-
+-- 5건
 
  
 --20. 부서별, 직책별 평균 급여를 구하여라.
 --   부서이름, 직책이름, 평균급여 소수점 둘째자리에서 반올림으로 구하여라.
-
+-- 19건
 
 
 --21.각 부서의 정보를 부서매니저 이름과 함께 출력(부서는 모두 출력되어야 함)
-
+-- 27건
 
  
 --22. 부서가 가장 많은 도시이름을 출력
@@ -104,6 +123,7 @@
 
 
 --23. 부서가 없는 도시 목록 출력
+-- 16건
 --조인사용
 
 --집합연산 사용
@@ -116,16 +136,17 @@
 
 
 --25. Finance 부서의 평균 급여보다 높은 급여를 받는 직원의 목록 출력
-
+-- 28건
 
 -- 26. 각 부서별 인원수를 출력하되, 인원이 없는 부서는 0으로 나와야 하며
 --     부서는 정식 명칭으로 출력하고 인원이 많은 순서로 정렬.
-
+-- 27건
 
 
 --27. 지역별 등록된 나라의 갯수 출력(지역이름, 등록된 나라의 갯수)
-
+-- 4건
 
 
  
 --28. 가장 많은 나라가 등록된 지역명 출력
+-- 1건
