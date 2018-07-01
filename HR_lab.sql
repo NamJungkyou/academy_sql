@@ -30,60 +30,212 @@ SELECT e.employee_id
 ;
 --4. Finance 부서에 소속된 직원의 목록 조회
 --조인으로 해결
-SELECT *
-  FROM employee e
-  JOIN department d
+SELECT e.employee_id
+     , e.first_name
+     , e.last_name
+     , e.department_id
+  FROM employees e JOIN departments d
+    ON e.department_id = d.department_id
+ WHERE d.department_name = 'Finance'
 ;
 
-
 --서브쿼리로 해결
-
-
+SELECT e.employee_id
+     , e.first_name
+     , e.last_name
+     , e.department_id
+  FROM employees e
+ WHERE e.department_id = (SELECT d.department_id
+                            FROM departments d
+                           WHERE d.department_name = 'Finance')
+;
 --6건
  
 --5. Steven King 의 직속 부하직원의 모든 정보를 조회
 --14건
 -- 조인 이용
-
+SELECT e1.EMPLOYEE_ID 
+     , e1.FIRST_NAME 
+     , e1.LAST_NAME 
+     , e1.EMAIL 
+     , e1.PHONE_NUMBER 
+     , e1.HIRE_DATE 
+     , e1.JOB_ID 
+     , e1.SALARY 
+     , e1.COMMISSION_PCT 
+     , e1.MANAGER_ID 
+     , e1.DEPARTMENT_ID
+  FROM employees e1 JOIN employees e2
+    ON e1.manager_id = e2.employee_id
+ WHERE e2.first_name = 'Steven'
+   AND e2.last_name = 'King'
+;
 
 -- 서브쿼리 이용
- 
+SELECT e.EMPLOYEE_ID 
+     , e.FIRST_NAME 
+     , e.LAST_NAME 
+     , e.EMAIL 
+     , e.PHONE_NUMBER 
+     , e.HIRE_DATE 
+     , e.JOB_ID 
+     , e.SALARY 
+     , e.COMMISSION_PCT 
+     , e.MANAGER_ID 
+     , e.DEPARTMENT_ID 
+  FROM employees e
+ WHERE e.manager_id = (SELECT e.employee_id
+                         FROM employees e
+                        WHERE e.first_name = 'Steven'
+                          AND e.last_name = 'King')
+;
+
 --6. Steven King의 직속 부하직원 중에서 Commission_pct 값이 null이 아닌 직원 목록
 --5건
-
+SELECT e1.EMPLOYEE_ID 
+     , e1.FIRST_NAME 
+     , e1.LAST_NAME 
+     , e1.EMAIL 
+     , e1.PHONE_NUMBER 
+     , e1.HIRE_DATE 
+     , e1.JOB_ID 
+     , e1.SALARY 
+     , e1.COMMISSION_PCT 
+     , e1.MANAGER_ID 
+     , e1.DEPARTMENT_ID
+  FROM employees e1 JOIN employees e2
+    ON e1.manager_id = e2.employee_id
+ WHERE e2.first_name = 'Steven'
+   AND e2.last_name = 'King'
+   AND e1.commission_pct IS NOT NULL
+;
 --7. 각 job 별 최대급여를 구하여 출력 job_id, job_title, job별 최대급여 조회
 --19건
-
-
+SELECT e.job_id
+     , j.job_title
+     , MAX(e.salary)
+  FROM employees e join jobs j
+    ON e.job_id = j.job_id
+ GROUP BY e.job_id, j.job_title
+;
  
 --8. 각 Job 별 최대급여를 받는 사람의 정보를 출력,
 --  급여가 높은 순서로 출력
 ----서브쿼리 이용
- 
+SELECT e.JOB_ID 
+     , e.EMPLOYEE_ID 
+     , e.FIRST_NAME 
+     , e.LAST_NAME 
+     , e.SALARY 
+     , e.EMAIL 
+     , e.PHONE_NUMBER 
+     , e.HIRE_DATE 
+     , e.COMMISSION_PCT 
+     , e.MANAGER_ID 
+     , e.DEPARTMENT_ID 
+  FROM employees e
+ WHERE (e.job_id, e.salary) IN (SELECT e.job_id
+                                     , MAX(e.salary)
+                                  FROM employees e
+                                 GROUP BY e.job_id)
+ ORDER BY e.salary DESC
+;
 ----join 이용
-
+SELECT e1.JOB_ID 
+     , e1.EMPLOYEE_ID 
+     , e1.FIRST_NAME 
+     , e1.LAST_NAME 
+     , e1.SALARY 
+     , e1.EMAIL 
+     , e1.PHONE_NUMBER 
+     , e1.HIRE_DATE 
+     , e1.COMMISSION_PCT 
+     , e1.MANAGER_ID 
+     , e1.DEPARTMENT_ID 
+  FROM employees e1 JOIN (SELECT e.job_id
+                               , MAX(e.salary) salary
+                            FROM employees e
+                           GROUP BY e.job_id) e2
+    ON e1.job_id = e2.job_id
+ WHERE e1.salary = e2.salary
+;
 
 --20건
 
 --9. 7번 출력시 job_id 대신 Job_name, manager_id 대신 Manager의 last_name, department_id 대신 department_name 으로 출력
+--job_name이 어디 있지...???// 7번에는 manager_id, department_id가 안나오는데...??
 --20건
-
-
+SELECT e1.JOB_ID 
+     , e1.EMPLOYEE_ID 
+     , e1.FIRST_NAME 
+     , e1.LAST_NAME 
+     , e1.SALARY 
+     , e1.EMAIL 
+     , e1.PHONE_NUMBER 
+     , e1.HIRE_DATE 
+     , e1.COMMISSION_PCT 
+     , e2.LAST_NAME "MANAGER_LAST_NAME"
+     , d.DEPARTMENT_NAME 
+  FROM employees e1 JOIN employees e2
+    ON e1.manager_id = e2.employee_id JOIN departments d
+    ON e1.department_id = d.department_id
+ WHERE (e1.job_id, e1.salary) IN (SELECT e.job_id
+                                     , MAX(e.salary)
+                                  FROM employees e
+                                 GROUP BY e.job_id)
+ ORDER BY e1.salary DESC
+;
 --10. 전체 직원의 급여 평균을 구하여 출력
-
+SELECT AVG(e.salary) 급여평균
+  FROM employees e
+;
 
 --11. 전체 직원의 급여 평균보다 높은 급여를 받는 사람의 목록 출력. 급여 오름차순 정렬
 --51건
+SELECT e.EMPLOYEE_ID 
+     , e.FIRST_NAME 
+     , e.LAST_NAME 
+     , e.EMAIL 
+     , e.PHONE_NUMBER 
+     , e.HIRE_DATE 
+     , e.JOB_ID 
+     , e.SALARY 
+     , e.COMMISSION_PCT 
+     , e.MANAGER_ID 
+     , e.DEPARTMENT_ID  
+  FROM employees e
+ WHERE e.salary > (SELECT AVG(e.salary)
+                     FROM employees e)
+ ORDER BY e.salary
+;
 
 --12. 각 부서별 평균 급여를 구하여 출력
 --12건
-
+SELECT e.department_id
+     , AVG(e.salary) "부서별 평균급여"
+  FROM employees e
+ GROUP BY e.department_id
+;
 --13. 12번의 결과에 department_name 같이 출력
 --12건
-
+SELECT e.department_id
+     , d.department_name
+     , AVG(e.salary) "부서별 평균급여"
+  FROM employees e LEFT OUTER JOIN departments d
+    ON e.department_id = d.department_id
+ GROUP BY e.department_id, d.department_name
+;
 
 --14. employees 테이블이 각 job_id 별 인원수와 job_title을 같이 출력하고 job_id 오름차순 정렬
 -- 19건
+SELECT e.job_id
+     , j.job_title
+     , COUNT(e.job_id)
+  FROM employees e JOIN jobs j
+    ON e.job_id = j.job_id
+ GROUP BY e.job_id, j.job_title
+ ORDER BY e.job_id
+;
 
 --15. employees 테이블의 job_id별 최저급여,
 --   최대급여를 job_title과 함께 출력 job_id 알파벳순 오름차순 정렬
