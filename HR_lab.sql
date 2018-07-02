@@ -240,8 +240,16 @@ SELECT e.job_id
 --15. employees 테이블의 job_id별 최저급여,
 --   최대급여를 job_title과 함께 출력 job_id 알파벳순 오름차순 정렬
 -- 19건
+SELECT e.job_id
+     , j.job_title
+     , min(e.salary)
+     , max(e.salary)
+  FROM employees e JOIN jobs j
+    ON e.job_id = j.job_id
+ GROUP BY e.job_id, j.job_title
+ ORDER BY e.job_id
+;
 
- 
 --16. Employees 테이블에서 인원수가 가장 많은 job_id를 구하고
 --   해당 job_id 의 job_title 과 그 때 직원의 인원수를 같이 출력
 
