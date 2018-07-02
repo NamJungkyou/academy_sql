@@ -253,7 +253,8 @@ SELECT e.job_id
 --16. Employees 테이블에서 인원수가 가장 많은 job_id를 구하고
 --   해당 job_id 의 job_title 과 그 때 직원의 인원수를 같이 출력
 
-
+SELECT e.job_id, COUNT(*)
+FROM employees e group by e.job_id;
 
 
 --17.사번,last_name, 급여, 직책이름(job_title), 부서명(department_name), 부서매니저이름
