@@ -273,6 +273,242 @@ UPDATE member m
   딱 하나의 데이터를 수정/삭제 하려면 
   WHERE절의 비교조건에 반드시 PK로 설정한 컬럼의 값을 비교하도록 권장.
   
-  PK는 전체 행에서 유이라혹, NOT NULL
-
+  PK는 전체 행에서 유일하고, NOT NULL임이 보장되기 때문.
+  
+  UPDATE, DELETE는 
+  
+  
 */
+
+-- UPDATE구문에 SELECT 서브쿼리 사용
+-- 'M08'아이디의 phone, gender 수정
+UPDATE member m
+   SET m.phone = '3318'
+     , m.gender = 'M'
+ WHERE m.member_id = 'M08' 
+;
+
+서브쿼리 적용
+UPDATE member m
+   SET m.phone = '3318'
+     , m.gender = 'M'
+ WHERE m.address = ( SELECT m.address
+                       FROM member m
+                      WHERE m.member_id = 'M08')
+;
+-- 1 행 이(가) 업데이트되었습니다.
+
+-- 'M13' 유재성 멤버의 성별 업데이트
+UPDATE member m
+   SET m.gender = (SELECT substr('MATH', 1, 1)
+                     FROM dual)
+ WHERE m.member_id = 'M13' 
+;
+-- 1 행 이(가) 업데이트되었습니다.
+
+-- 'M12' 데이터 gender 컬럼 수저시 제약조건 위반
+UPDATE member m
+   SET m.gender = 'N'
+ WHERE m.member_id = 'M12'
+; --->ORA-02290: check constraint (SCOTT.CK_MEMBER_GENDER) violated
+
+-- address가 NULL인 사람들의 주소를 '대전'으로 일괄 수정
+
+UPDATE member m
+   SET m.address = '대전'
+ WHERE m.address  IS NULL
+;
+-- ORA-02290: check constraint (SCOTT.CK_MEMBER_GENDER) violated
+
+-- 3) DELETE : 테이블에서 행단위로 데이터 삭제
+-- 1. WHERE 조건이 있는 DELETE문
+
+insert into member (member_id, member_name, phone, address, birth_month, gender) 
+values ('M99', '채한나', '9492', '홍도동', 1, 'F');
+
+commit;
+
+DELETE member m
+ WHERE m.gender = 'R'
+ ;
+ -- 0개 행 이(가) 삭제되었습니다.
+ -- 이 결과는 gender에 R값이 없으므로 삭제된 행이 없는 결과를 얻은 것 뿐 구문오류 아님
+ -- 논리적으로 잘못된 결과
+ 
+ DELETE member m
+ WHERE m.gender = 'F'
+ ;
+ -- 2개 행 이(가) 삭제되었습니다.
+ -- WHERE 조건절을 만족하는 모든 행에 대해 삭제작업 진행
+ 
+ -- 'M99'행을 삭제하고싶다면 PK로 삭제하자
+DELETE member m
+ WHERE m.member_id = 'M99'
+;
+-- 1 행 이(가) 삭제되었습니다.
+commit;
+
+-- WHERE조건을 아예 누락(생략)한 경우 전체행 삭제
+DELETE member;
+-- 13개 행 이(가) 삭제되었습니다.
+rollback;
+
+-- 3. DELETE의 WHERE절에 서브쿼리 조합
+--    주소가 대전이 사람을 모두 삭제
+-- (1) 주소가 대전인 사람을 조회
+SELECT m.member_id
+  FROM member m
+ WHERE m.address = '대전'
+;
+
+DELETE member m
+ WHERE m.member_id IN (SELECT m.member_id
+                         FROM member m
+                        WHERE m.address = '대전')
+;
+rollback;
+
+-- 위와 동일한 작업을 일반 where로 삭제
+DELETE member m
+ WHERE m.address = '대전'
+;
+rollback;
+
+------------------------------------------------------------
+-- DELETE vs. TRUNCATE
+/*
+  1. TRUNCATE는 DDL에 속하는 명령어로 rollback지점이 없음.
+     따라서 한번 실해된 DDL은 되돌릴 수 없음.
+     
+  2. TRUNCATE는 WHERE절 조합이 안되므로 특정 데이터를 선별하여 삭제할 수 없음.
+  
+  !@#@!사용시 주의!@#@!
+*/
+
+-- new_member테이블을 TRUNCATE로 날려보자
+-- 실행 전 되돌아갈 커밋 지점 생성
+commit;
+
+-- new_member테이블 내용 확인
+SELECT m.*
+  FROM new_member m
+;
+
+--TURNCATE로 new_member테이블 잘라내기
+TRUNCATE TABLE new_member;
+-- Table NEW_MEMBER이(가) 잘렸습니다.
+
+-- new_member테이블 내용 확인
+SELECT m.*
+  FROM new_member m
+;
+
+-- rollback 시도
+rollback;
+-- new_member테이블 내용 확인
+SELECT m.*
+  FROM new_member m
+;
+-- rollback 해도 돌아오지 않음
+-- DDL종류의 구문은 생성 즉시 커밋이 이루어져서 DDL실행 이후로 롤백 시점이 잡힘 
+
+----------------------------------------------------------------------------------------
+-- TCL : Transaction Control Language
+-- 1) COMMIT
+-- 2) ROLLBACK
+-- 3) SAVEPOINT
+--  1. new_member테이블에 1행 추가
+INSERT INTO new_member(member_id, member_name)
+VALUES ('M01', '홍길동')
+;
+-- 1행 추가 상태까지 중간저장
+SAVEPOINT do_insert; -- Savepoint이(가) 생성되었습니다.
+--  2. '홍길동' 데이터의 주소를 수정
+UPDATE new_member m
+   SET m.address = '율도국'
+ WHERE m.member_id = 'M01'
+;
+-- 주소 수정 상태까지 중간저장
+SAVEPOINT do_update_addr; -- Savepoint이(가) 생성되었습니다.
+
+--  3. '홍길동'데이터의 전화번호를 수정
+UPDATE new_member m
+   SET m.phone = '0001'
+ WHERE m.member_id = 'M01'
+;
+-- 전화번로 수정 상태까지 중간저장
+SAVEPOINT do_update_phone; -- Savepoint이(가) 생성되었습니다.
+
+--  4. '홍길동'데이터의 성별을 수정
+UPDATE new_member m
+   SET m.gender = 'K'
+ WHERE m.member_id = 'M01'
+;
+-- 성별 수정 상태까지 중간저장
+SAVEPOINT do_update_gender; -- Savepoint이(가) 생성되었습니다.
+
+------------------------------------------------------------
+-- 홍길동 데이터의 ROLLBACK 사니리오
+-- 1. 주소 수정까지는 맞는데 전화번호, 성별 수정은 잘못됨
+-- : 되돌아기야할 SAVEPOINT = do_update_addr
+ROLLBACK TO do_update_addr;
+-- 2. 주소, 전화번호까지 수정이 맍고, 성별 수정이 잘못됨
+ROLLBACK TO do_update_phone;
+---> ORA-01086: savepoint 'DO_UPDATE_PHONE' never established in this session or is invalid
+--              SAVEPOINT의 순서가 do_update_addr 다음이기 떄문에 do_update_addr까지 rollback하면 그 이후에 생성된 savepoint는 삭제됨
+-- : 되돌아기야할 SAVEPOINT = do_update_phone
+-- 앞의 수정구문 재 실행 후 다시 전화번호 수정까지 돌아감
+ROLLBACK TO do_update_phone;
+
+-- 3. 2번 수행 후 어디까지 롤백이 가능한가
+ROLLBACK TO do_update_addr;
+ROLLBACK TO do_insert;
+ROLLBACK;
+-- Savepoint로 한번 되돌아가면 되돌아간 시점 이후 생성된 SAVEPOINT는 무효화 됨
+
+-----------------------------------------------------------------------------------------------------------
+
+-- sequence
+-- 1. 시작번호 :1, 최대 : 30, nocycle
+CREATE SEQUENCE seq_member_id
+START WITH 1
+MAXVALUE 30
+NOCYCLE
+;
+-- Sequence SEQ_MEMBER_ID이(가) 생성되었습니다.
+
+-- 시퀀스가 생성되면 유저 딕셔너리에 정보가 저장됨 : user_sequences
+
+SELECT s.sequence_name
+     , s.min_value
+     , s.max_value
+     , s.cycle_flag
+     , s.increment_by
+  FROM user_sequences s
+ WHERE s.sequence_name = 'SEQ_MEMBER_ID'
+ ;
+ -- SEQ_MEMBER_ID	1	30	N	1
+
+-- 사용자의 객체가 저장되는 딕셔너리 테이블
+-- user_objects
+SELECT o.object_name
+     , o.object_type
+     , o.objent
+  FROM user_objects u
+;
+
+/*------------------------------------------------
+  메타 데이터를 저장하는 유저 딕셔너리
+  
+  무결성 제약조건 : user_constraints
+  시퀀스 생성정보 : user_sequences
+  태이블 생성정보 : user_table
+  인덱스 생성종보 : usert_indexes
+  객체들 생성정보 : user_objects
+-----------------------------------------------*/
+
+-- 2. 생성된 시퀀스 사용
+-- 사용법 : 시퀀스이름.NEXTVAL
+
+SELECT seq_member_id.NEXTVAL
+  FROM dual;
