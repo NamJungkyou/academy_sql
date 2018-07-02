@@ -512,3 +512,65 @@ SELECT o.object_name
 
 SELECT seq_member_id.NEXTVAL
   FROM dual;
+  
+
+SELECT 'M' || LPAD(seq_member_id.nextval, 2, 0) as member_id
+  FROM dual;
+  
+------------------------------------------------------------------------
+
+--INDEX : 데이터의 검색(조회)시 일저한 검색 속도를 보장하기 위해 DBMS가 관리하는 객체
+
+-- 1. user_indexes딕셔너리에서 검색
+
+SELECT i.INDEX_NAME
+     , i.INDEX_TYPE
+     , i.TABLE_NAME
+     , i.TABLE_OWNER
+     , i.INCLUDE_COLUMN
+  FROM user_indexes i
+;
+
+-- 2. 테이블의 주키(PK) 컬럼에 대해서는 이미 DBMS가 작동으로 인덱스 생성.
+--    따라서 새로 생성 불가
+
+-- 예) member테이블의 member_id컬럼에 인덱스 생성 시도
+CREATE INDEX idx_member_id
+ON member(member_id)
+;
+-- ORA-01408: such column list already indexed;
+-- 테이블의 주키 컬럼에는 이미 있으므로 오류 발생
+-- 생성하는 인덱스 이름이 달라도 생성할 수 없음.
+
+-- 3. 복사한 테이블인 new_member에는 PK가 없으므로 인덱스도 없는 상태
+--   (1) new_member 테이블에 index생성시도
+CREATE INDEX idx_new_member_id
+ON new_member(member_id)
+;
+-- Index IDX_NEW_MEMBER_ID이(가) 생성되었습니다.
+
+SELECT i.INDEX_NAME
+     , i.INDEX_TYPE
+     , i.TABLE_NAME
+     , i.TABLE_OWNER
+     , i.INCLUDE_COLUMN
+  FROM user_indexes 
+;
+-- IDX_MEMBER_ID	NORMAL	NEW_MEMBER	SCOTT	
+
+--   (2) 대상 컬럼이 중복 값이 없는 컬럼임이 확실하다면 UNIQUE 인덱스 생성이 가능
+DROP INDEX idx_new_member_id;
+
+CREATE UNIQUE INDEX idx_new_member_id
+ON new_member(member_id)
+;
+
+SELECT i.INDEX_NAME
+     , i.INDEX_TYPE
+     , i.TABLE_NAME
+     , i.TABLE_OWNER
+     , i.INCLUDE_COLUMN
+  FROM user_indexes 
+;
+-- INDEX가 명시적으로 사용되는 경우
+-- 오라클에 빠른 검색을 위해 HINT절을 SELECT에 사용하는 경우가 있다
