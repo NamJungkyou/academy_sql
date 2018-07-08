@@ -9,6 +9,11 @@ SELECT e1.EMPNO 사원번호
  WHERE e1.mgr = e2.empno(+)
 ;
 
+SELECT e.EMPNO 사원번호
+     , e.ENAME 사원이름
+  FROM emp e
+ WHERE e.mgr IS NULL
+;
 /*
 사원번호, 사원이름, 상사이름
 --------------------------------------------------------------
@@ -24,25 +29,34 @@ SELECT e1.EMPNO 사원번호
 7566	JONES	KING
 7369	SMITH	FORD
 7839	KING	
+
+사원번호, 사원이름
+--------------------------------------------------------------
+7839	KING
 */
 
--- 실습 4) emp 테이블에서 부하직원이 없는 직원 명단 출력/////////////////////////
-SELECT e2.MGR 사원번호
-     , e1.ENAME 사원이름
-     , e1.ENAME 상사이름
-  FROM emp e1
-     , emp e2
- WHERE e1.mgr = e2.empno(+)
+-- 실습 4) emp 테이블에서 부하직원이 없는 직원 명단 출력
+SELECT e.empno
+     , e.ename
+     , e.job
+  FROM emp e
+ WHERE e.empno NOT IN (SELECT e1.MGR 사원번호
+                         FROM emp e1
+                            , emp e2
+                        WHERE e1.mgr = e2.empno
+                     GROUP BY e1.mgr)
 ;
 
-SELECT e1.EMPNO
-     , e1.ENAME
-  FROM emp e1 LEFT OUTER JOIN emp e2
-;
 /*
-
+EMPNO, ENAME, JOB
 --------------------------------------------------------------
-
+7369	SMITH	CLERK
+7499	ALLEN	SALESMAN
+7521	WARD	SALESMAN
+7654	MARTIN	SALESMAN
+7844	TURNER	SALESMAN
+7900	JAMES	CLERK
+7934	MILLER	CLERK
 */
 
 -- 실습 5) emp 테이블에서 JAMES와 직무가 동일한 직원의 정보를 조회.
