@@ -28,7 +28,7 @@ PL/SQL 프로시저가 성공적으로 완료되었습니다.
 
 -- 실습 3)
 CREATE TABLE log_table
-(  user_id VARCHAR2(20)
+(  userid VARCHAR2(20)
  , log_date DATE
 );
 -- Table LOG_TABLE이(가) 생성되었습니다.
@@ -45,7 +45,7 @@ END log_execution;
 EXEC LOG_EXECUTION;
 -- PL/SQL 프로시저가 성공적으로 완료되었습니다.
 
-SELECT l.user_id
+SELECT l.userid
      , l.log_date
   FROM log_table l
 ;
@@ -57,19 +57,39 @@ myid	18/07/03
 
 -- 실습 4)
 CREATE OR REPLACE PROCEDURE log_execution
-( v_log_user  IN  log_table.user_id%TYPE
- ,v_log_date OUT  log_table.log_date%TYPE)
+( v_log_user  IN  VARCHAR2
+ ,v_log_date  OUT VARCHAR2)
 IS
 BEGIN
-    v_log_user := 'myid'
     INSERT INTO log_table
-    VALUES (v_userid, sysdate);
+    VALUES (v_log_user, sysdate);
+    
+   v_log_date := sysdate;
+   
 END log_execution;
 /
-/*
 
+VAR v_log_result VARCHAR2(300)
+
+EXEC log_execution('myid2', :v_log_result)
+
+PRINT v_log_result
+
+select * from log_table;
+/*
+V_LOG_RESULT
+--------------------------------------------------------------------------------
+18/07/09
+
+
+USER_ID, LOG_DATE
+-----------------
+myid	18/07/09
+myid2	18/07/09
 */
 
+
+--------------------여기부터 06------------------------------
 -- 실습 5)
 
 /*
